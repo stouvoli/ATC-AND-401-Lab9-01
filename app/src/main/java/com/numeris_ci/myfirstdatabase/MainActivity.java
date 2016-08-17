@@ -12,9 +12,24 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.Spinner;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    private MyDBAdapter dbAdapter;
+    private ListView list;
+    private CharSequence mTitle;
+    private Spinner faculties;
+    private Button addStudent;
+    private Button deleteEngineers;
+    private EditText studentName;
+    private String[] allFaculties = {"Engineering", "Business", "Arts"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +55,31 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        mTitle = getTitle();
+        faculties = (Spinner) findViewById(R.id.faculties_spinner);
+        studentName = (EditText) findViewById(R.id.student_name);
+        addStudent = (Button) findViewById(R.id.add_student);
+        deleteEngineers = (Button) findViewById(R.id.delete_engineers);
+        list = (ListView) findViewById(R.id.student_list);
+        faculties.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, allFaculties));
+        dbAdapter = new MyDBAdapter(this);
+        dbAdapter.open();
+        deleteEngineers.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbAdapter.deleteAllEngineers();
+                loadList();
+            }
+        });
+        addStudent.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbAdapter.insertStudent(studentName.getText().toString(), faculties.getSelectedItemPosition()+1);
+                loadList();
+            }
+        });
+        loadList();
     }
 
     @Override
@@ -98,4 +138,14 @@ public class MainActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
+    private void loadList() {
+        ArrayList<String> allStudents = new ArrayList<String>();
+        allStudents = dbAdapter.selectAllStudents();
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                this, android.R.layout.simple_expandable_list_item_1, allStudents);
+        list.setAdapter(adapter);
+    }
+
+
 }
